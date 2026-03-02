@@ -4,8 +4,8 @@ const polls = {
     answers: ["Yes", "No"]
   },
   "2026-03-03": {
-    question: "Best season?",
-    answers: ["Spring", "Summer", "Fall", "Winter"]
+    question: "Is water wet?",
+    answers: ["Yes", "No", "Life is a simulation, therefore its fake."]
   },
   "2026-03-04": {
     question: "Pineapple on pizza?",
