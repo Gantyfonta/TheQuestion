@@ -1,38 +1,84 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Daily Opinion Poll</title>
+  <title>Daily Opinion</title>
   <script src="questions.js"></script>
 
   <style>
     body {
-      font-family: Arial;
-      text-align: center;
-      margin-top: 80px;
-      background: #111;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #141e30, #243b55);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
       color: white;
     }
 
+    .card {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(12px);
+      padding: 40px;
+      border-radius: 20px;
+      width: 400px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      animation: fadeIn 0.6s ease;
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      font-weight: 500;
+    }
+
+    .answers {
+      display: grid;
+      gap: 15px;
+    }
+
     button {
-      padding: 12px 25px;
-      margin: 10px;
+      padding: 15px;
       font-size: 16px;
-      cursor: pointer;
+      border-radius: 12px;
       border: none;
+      cursor: pointer;
+      transition: 0.2s;
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      background: rgba(255,255,255,0.2);
     }
 
     .selected {
-      background: limegreen;
-      color: black;
+      background: linear-gradient(90deg, #00f260, #0575e6);
+      color: white;
+      box-shadow: 0 0 15px rgba(0,242,96,0.6);
+    }
+
+    .status {
+      margin-top: 20px;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 
 <body>
 
-<h1 id="question"></h1>
-<div id="answers"></div>
-<h2 id="status"></h2>
+<div class="card">
+  <h1 id="question">Loading...</h1>
+  <div class="answers" id="answers"></div>
+  <div class="status" id="status"></div>
+</div>
 
 <script>
 const today = new Date().toISOString().slice(0,10);
@@ -74,6 +120,9 @@ function renderButtons() {
   if (getVote()) {
     document.getElementById("status").innerText =
       "Your current vote: " + getVote() + " (click another to change)";
+  } else {
+    document.getElementById("status").innerText =
+      "Select an option to vote";
   }
 }
 </script>
