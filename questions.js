@@ -9,6 +9,14 @@ export const polls = {
   },
   "2026-03-04": {
     question: "Pineapple on pizza?",
-    answers: ["No, but I'll change my mind.", "Yes. As it should be."]
+    answers: ["Yes. As it should be.", "No, but I'll change my mind."]
+  },
+"2026-03-05": {
+    question: "Is a hotdog a sandwitch?",
+    answers: ["Yes.", "No."]
+  },
+  "2026-03-06": {
+    question: "Is ketchup a smoothie?",
+    answers: ["Yes.", "No."]
   }
 };
