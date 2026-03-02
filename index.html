@@ -2,8 +2,6 @@
 <html>
 <head>
   <title>Daily Opinion</title>
-  <script src="questions.js"></script>
-
   <style>
     body {
       margin: 0;
@@ -21,110 +19,153 @@
       backdrop-filter: blur(12px);
       padding: 40px;
       border-radius: 20px;
-      width: 400px;
+      width: 420px;
       text-align: center;
       box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-      animation: fadeIn 0.6s ease;
-    }
-
-    h1 {
-      margin-bottom: 30px;
-      font-weight: 500;
     }
 
     .answers {
       display: grid;
-      gap: 15px;
+      gap: 12px;
+      margin-top: 20px;
     }
 
-    button {
-      padding: 15px;
-      font-size: 16px;
+    .option {
+      background: rgba(255,255,255,0.08);
       border-radius: 12px;
-      border: none;
+      padding: 12px;
       cursor: pointer;
+      position: relative;
+      overflow: hidden;
       transition: 0.2s;
-      background: rgba(255,255,255,0.1);
-      color: white;
     }
 
-    button:hover {
-      transform: scale(1.05);
-      background: rgba(255,255,255,0.2);
+    .option:hover {
+      transform: scale(1.03);
+    }
+
+    .bar {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #00f260, #0575e6);
+      width: 0%;
+      z-index: 0;
+      transition: width 0.5s ease;
+    }
+
+    .label {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
     }
 
     .selected {
-      background: linear-gradient(90deg, #00f260, #0575e6);
-      color: white;
       box-shadow: 0 0 15px rgba(0,242,96,0.6);
     }
 
-    .status {
-      margin-top: 20px;
-      font-size: 14px;
-      opacity: 0.8;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(15px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
   </style>
 </head>
-
 <body>
 
 <div class="card">
-  <h1 id="question">Loading...</h1>
+  <h1 id="question"></h1>
   <div class="answers" id="answers"></div>
-  <div class="status" id="status"></div>
 </div>
 
-<script>
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+import { polls } from "./questions.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBGj-pQU6rgyK183jFd2_hWiAXFeAvt73U",
+  authDomain: "dailyquestionair.firebaseapp.com",
+  projectId: "dailyquestionair",
+  storageBucket: "dailyquestionair.firebasestorage.app",
+  messagingSenderId: "488248199458",
+  appId: "1:488248199458:web:309a797a7a3ddceb4c3d7b",
+  measurementId: "G-2XJLX74PMY"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+getAnalytics(app);
+
 const today = new Date().toISOString().slice(0,10);
 const poll = polls[today];
-const key = "poll-" + today;
+const docRef = doc(db, "polls", today);
+const localKey = "vote-" + today;
 
 if (!poll) {
   document.getElementById("question").innerText = "No poll today!";
 } else {
   document.getElementById("question").innerText = poll.question;
-  renderButtons();
+  render();
 }
 
-function getVote() {
-  return localStorage.getItem(key);
-}
+async function render() {
+  const snap = await getDoc(docRef);
 
-function setVote(ans) {
-  localStorage.setItem(key, ans);
-  renderButtons();
-}
+  if (!snap.exists()) {
+    const initData = {};
+    poll.answers.forEach(a => initData[a] = 0);
+    await setDoc(docRef, initData);
+  }
 
-function renderButtons() {
-  const div = document.getElementById("answers");
-  div.innerHTML = "";
+  const data = (await getDoc(docRef)).data();
+  const total = Object.values(data).reduce((a,b)=>a+b,0);
 
-  poll.answers.forEach(ans => {
-    let btn = document.createElement("button");
-    btn.innerText = ans;
+  const container = document.getElementById("answers");
+  container.innerHTML = "";
 
-    if (getVote() === ans) {
-      btn.classList.add("selected");
+  poll.answers.forEach(answer => {
+    const count = data[answer] || 0;
+    const percent = total ? Math.round((count/total)*100) : 0;
+
+    const div = document.createElement("div");
+    div.className = "option";
+    if (localStorage.getItem(localKey) === answer) {
+      div.classList.add("selected");
     }
 
-    btn.onclick = () => setVote(ans);
-    div.appendChild(btn);
+    div.onclick = () => vote(answer);
+
+    div.innerHTML = `
+      <div class="bar" style="width:${percent}%"></div>
+      <div class="label">
+        <span>${answer}</span>
+        <span>${percent}%</span>
+      </div>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+async function vote(answer) {
+  const previous = localStorage.getItem(localKey);
+
+  if (previous === answer) return;
+
+  if (previous) {
+    await updateDoc(docRef, {
+      [previous]: increment(-1)
+    });
+  }
+
+  await updateDoc(docRef, {
+    [answer]: increment(1)
   });
 
-  if (getVote()) {
-    document.getElementById("status").innerText =
-      "Your current vote: " + getVote() + " (click another to change)";
-  } else {
-    document.getElementById("status").innerText =
-      "Select an option to vote";
-  }
+  localStorage.setItem(localKey, answer);
+  render();
 }
+
 </script>
 
 </body>
