@@ -18,63 +18,64 @@
       margin: 10px;
       font-size: 16px;
       cursor: pointer;
+      border: none;
     }
 
-    #results {
-      margin-top: 20px;
-      font-size: 20px;
+    .selected {
+      background: limegreen;
+      color: black;
     }
   </style>
 </head>
 
 <body>
 
-<h1 id="question">Loading...</h1>
+<h1 id="question"></h1>
 <div id="answers"></div>
-<div id="results"></div>
+<h2 id="status"></h2>
 
 <script>
 const today = new Date().toISOString().slice(0,10);
 const poll = polls[today];
+const key = "poll-" + today;
 
 if (!poll) {
   document.getElementById("question").innerText = "No poll today!";
 } else {
   document.getElementById("question").innerText = poll.question;
+  renderButtons();
+}
+
+function getVote() {
+  return localStorage.getItem(key);
+}
+
+function setVote(ans) {
+  localStorage.setItem(key, ans);
+  renderButtons();
+}
+
+function renderButtons() {
+  const div = document.getElementById("answers");
+  div.innerHTML = "";
 
   poll.answers.forEach(ans => {
     let btn = document.createElement("button");
     btn.innerText = ans;
-    btn.onclick = () => vote(ans);
-    document.getElementById("answers").appendChild(btn);
+
+    if (getVote() === ans) {
+      btn.classList.add("selected");
+    }
+
+    btn.onclick = () => setVote(ans);
+    div.appendChild(btn);
   });
-}
 
-function vote(ans) {
-  let key = "poll-" + today;
-  let data = JSON.parse(localStorage.getItem(key) || "{}");
-
-  if (data.voted) {
-    alert("You already voted today!");
-    return;
+  if (getVote()) {
+    document.getElementById("status").innerText =
+      "Your current vote: " + getVote() + " (click another to change)";
   }
-
-  data.voted = ans;
-  localStorage.setItem(key, JSON.stringify(data));
-  showResults();
 }
-
-function showResults() {
-  let key = "poll-" + today;
-  let data = JSON.parse(localStorage.getItem(key) || "{}");
-
-  if (!data.voted) return;
-
-  document.getElementById("results").innerHTML =
-    "You voted: <b>" + data.voted + "</b>";
-}
-
-showResults();
 </script>
 
 </body>
