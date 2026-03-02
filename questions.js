@@ -1,4 +1,4 @@
-const polls = {
+export const polls = {
   "2026-03-02": {
     question: "Is cereal soup?",
     answers: ["Yes", "No"]
