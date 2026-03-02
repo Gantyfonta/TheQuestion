@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Daily Opinion Poll</title>
+  <script src="questions.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      margin-top: 80px;
+      background: #111;
+      color: white;
+    }
+
+    button {
+      padding: 12px 25px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #results {
+      margin-top: 20px;
+      font-size: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1 id="question">Loading...</h1>
+<div id="answers"></div>
+<div id="results"></div>
+
+<script>
+const today = new Date().toISOString().slice(0,10);
+const poll = polls[today];
+
+if (!poll) {
+  document.getElementById("question").innerText = "No poll today!";
+} else {
+  document.getElementById("question").innerText = poll.question;
+
+  poll.answers.forEach(ans => {
+    let btn = document.createElement("button");
+    btn.innerText = ans;
+    btn.onclick = () => vote(ans);
+    document.getElementById("answers").appendChild(btn);
+  });
+}
+
+function vote(ans) {
+  let key = "poll-" + today;
+  let data = JSON.parse(localStorage.getItem(key) || "{}");
+
+  if (data.voted) {
+    alert("You already voted today!");
+    return;
+  }
+
+  data.voted = ans;
+  localStorage.setItem(key, JSON.stringify(data));
+  showResults();
+}
+
+function showResults() {
+  let key = "poll-" + today;
+  let data = JSON.parse(localStorage.getItem(key) || "{}");
+
+  if (!data.voted) return;
+
+  document.getElementById("results").innerHTML =
+    "You voted: <b>" + data.voted + "</b>";
+}
+
+showResults();
+</script>
+
+</body>
+</html>
