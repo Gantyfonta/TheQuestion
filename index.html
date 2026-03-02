@@ -117,6 +117,8 @@ async function render() {
     await setDoc(docRef, initData);
   }
 
+  console.log("DATA:", data);
+console.log("TOTAL:", total);
   const data = (await getDoc(docRef)).data();
   const total = Object.values(data).reduce((a,b)=>a+b,0);
 
