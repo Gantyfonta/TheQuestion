@@ -104,7 +104,7 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, onSnapshot, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, onSnapshot, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import { polls } from "./questions.js";
@@ -134,6 +134,13 @@ const poll = polls[today];
 const docRef = doc(db, "polls", today);
 const localKey = "vote-" + today;
 
+// Unique ID for this visitor to track their specific vote in the database
+let visitorId = localStorage.getItem("visitorId");
+if (!visitorId) {
+  visitorId = "user_" + Math.random().toString(36).substring(2, 15);
+  localStorage.setItem("visitorId", visitorId);
+}
+
 if (!poll) {
   document.getElementById("question").innerText = "No poll today!";
 } else {
@@ -142,36 +149,45 @@ if (!poll) {
   // Use onSnapshot for real-time updates
   onSnapshot(docRef, async (snap) => {
     if (!snap.exists()) {
-      const initData = {};
-      poll.answers.forEach(a => initData[a] = 0);
-      await setDoc(docRef, initData);
+      await setDoc(docRef, { votes: {} });
       return;
     }
-    renderUI(snap.data());
+    const data = snap.data();
+    renderUI(data.votes || {});
   }, (err) => {
     console.error("Firestore listener error:", err);
     document.getElementById("question").innerText = "Connection error. Please refresh.";
   });
 }
 
-function renderUI(data) {
-  // Sanitize data: ensure no negative counts for display/percentage calculation
-  const displayData = {};
-  poll.answers.forEach(answer => {
-    displayData[answer] = Math.max(0, data[answer] || 0);
+function renderUI(votesMap) {
+  // Calculate totals from the votes map
+  const counts = {};
+  poll.answers.forEach(a => counts[a] = 0);
+  
+  Object.values(votesMap).forEach(answer => {
+    if (counts.hasOwnProperty(answer)) {
+      counts[answer]++;
+    }
   });
 
-  const total = Object.values(displayData).reduce((a, b) => a + b, 0);
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
   const container = document.getElementById("answers");
   container.innerHTML = "";
 
+  // Get the current user's vote from the database state (source of truth)
+  const myVote = votesMap[visitorId];
+  if (myVote) {
+    localStorage.setItem(localKey, myVote);
+  }
+
   poll.answers.forEach(answer => {
-    const count = displayData[answer];
+    const count = counts[answer];
     const percent = total ? Math.round((count / total) * 100) : 0;
 
     const div = document.createElement("div");
     div.className = "option";
-    if (localStorage.getItem(localKey) === answer) {
+    if (myVote === answer) {
       div.classList.add("selected");
     }
 
@@ -188,7 +204,7 @@ function renderUI(data) {
     container.appendChild(div);
   });
 
-  updatePieChart(displayData);
+  updatePieChart(counts);
 }
 
 function updatePieChart(data) {
@@ -234,22 +250,12 @@ function updatePieChart(data) {
 }
 
 async function vote(answer) {
-  const previous = localStorage.getItem(localKey);
-
-  if (previous === answer) return;
-
-  const updates = {};
-  updates[answer] = increment(1);
-
-  // Only decrement if the previous vote was for a valid option in this poll
-  if (previous && poll.answers.includes(previous)) {
-    updates[previous] = increment(-1);
-  }
-
   try {
-    await updateDoc(docRef, updates);
+    // Update only the current user's entry in the votes map
+    await updateDoc(docRef, {
+      [`votes.${visitorId}`]: answer
+    });
     localStorage.setItem(localKey, answer);
-    // UI will update automatically via onSnapshot
   } catch (err) {
     console.error("Vote failed:", err);
   }
