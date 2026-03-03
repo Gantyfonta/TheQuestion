@@ -15,7 +15,11 @@ export const polls = {
     question: "Pineapple on pizza?",
     answers: ["Yes. As it should be.", "No, but I'll change my mind."]
   },
-"2026-03-6": {
+  "2026-03-06": {
+    question: "Is the Minecraft End text a poem??",
+    answers: ["Yes.", "No."]
+  },
+"2026-03-7": {
     question: "Is a hotdog a sandwitch?",
     answers: ["Yes.", "No."]
   },
@@ -23,11 +27,11 @@ export const polls = {
     question: "Is ketchup a smoothie?",
     answers: ["Yes.", "No."]
   },
-  "2026-03-07": {
+  "2026-03-08": {
     question: "Is gyro pronounced YURO or JYRO?",
     answers: ["YURO.", "JYRO."]
   },
-   "2026-03-08": {
+   "2026-03-09": {
     question: "Are you a robot?",
     answers: ["Yes.", "No."]
   }
