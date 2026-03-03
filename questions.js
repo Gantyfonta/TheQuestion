@@ -26,5 +26,9 @@ export const polls = {
   "2026-03-07": {
     question: "Is gyro pronounced YURO or JYRO?",
     answers: ["YURO.", "JYRO."]
+  },
+   "2026-03-08": {
+    question: "Are you a robot?",
+    answers: ["Yes.", "No."]
   }
 };
