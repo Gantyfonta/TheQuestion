@@ -21,7 +21,7 @@ export const polls = {
   },
 "2026-03-7": {
     question: "Is a hotdog a sandwitch?",
-    answers: ["Yes.", "No."]
+    answers: ["Yes.", "No.", "It's a taco."]
   },
   "2026-03-07": {
     question: "Is ketchup a smoothie?",
@@ -36,3 +36,23 @@ export const polls = {
     answers: ["Yes.", "No."]
   }
 };
+
+
+export const randomPolls = [
+  {
+    id: "r1",
+    question: "Is a hotdog a sandwich?",
+    answers: ["Yes", "No", "It's a taco"]
+  },
+  {
+    id: "r2",
+    question: "Which came first: Chicken or Egg?",
+    answers: ["Chicken", "Egg"]
+  },
+  {
+    id: "r3",
+    question: "Best superpower?",
+    answers: ["Flight", "Invisibility", "Teleportation", "Super Strength"]
+  }
+];
+
