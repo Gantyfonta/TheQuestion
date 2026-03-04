@@ -258,10 +258,16 @@ function renderUI(votesMap) {
 
     div.onclick = () => vote(answer);
 
+    const colors = ["#00f260", "#0575e6", "#f27d26", "#ff4444", "#8e9299"];
+    const optionColor = colors[activePoll.answers.indexOf(answer) % colors.length];
+
     div.innerHTML = `
-      <div class="bar" style="width:${percent}%"></div>
+      <div class="bar" style="width:${percent}%; background: linear-gradient(90deg, ${optionColor}, #0575e6)"></div>
       <div class="label">
-        <span>${answer}</span>
+        <span style="display: flex; align-items: center; gap: 8px;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: ${optionColor}; display: inline-block;"></span>
+          ${answer}
+        </span>
         <span>${percent}%</span>
       </div>
     `;
@@ -289,7 +295,7 @@ function updatePieChart(data) {
     .attr("transform", `translate(${width / 2},${height / 2})`);
 
   const color = d3.scaleOrdinal()
-    .domain(Object.keys(data))
+    .domain(activePoll.answers)
     .range(["#00f260", "#0575e6", "#f27d26", "#ff4444", "#8e9299"]);
 
   const pie = d3.pie()
@@ -312,6 +318,25 @@ function updatePieChart(data) {
     .attr("stroke", "rgba(255,255,255,0.1)")
     .style("stroke-width", "2px")
     .style("opacity", 0.8);
+
+  // Add labels
+  svg
+    .selectAll('allSlices')
+    .data(data_ready)
+    .enter()
+    .append('text')
+    .text(d => {
+      const total = d3.sum(Object.values(data));
+      const percent = total ? Math.round((d.data[1] / total) * 100) : 0;
+      return percent > 8 ? `${percent}%` : ''; // Only show if > 8% for readability
+    })
+    .attr("transform", d => `translate(${arc.centroid(d)})`)
+    .style("text-anchor", "middle")
+    .style("font-size", "9px")
+    .style("fill", "white")
+    .style("font-weight", "600")
+    .style("pointer-events", "none")
+    .style("text-shadow", "0 1px 2px rgba(0,0,0,0.5)");
 }
 
 async function vote(answer) {
